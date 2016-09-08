@@ -1,6 +1,7 @@
 package goap
 
-type Action interface {
+// Action is the interface that describes what the planner and
+type Actionable interface {
 
 	// The cost of performing the action.
 	// Figure out a weight that suits the action.
@@ -31,11 +32,47 @@ type Action interface {
 
 	AddPrecondition(key string, value interface{})
 	RemovePrecondition(key string)
-	Preconditions() KeyValuePairs
+	Preconditions() StateList
 
 	AddEffect(key string, value interface{})
 	RemoveEffect(key string)
-	Effects() KeyValuePairs
+	Effects() StateList
 
 	String() string
+}
+
+func NewAction() Action {
+	return Action{
+		preconditions: make(StateList, 0),
+		effects:       make(StateList, 0),
+	}
+}
+
+type Action struct {
+	preconditions StateList
+	effects       StateList
+}
+
+func (a *Action) AddPrecondition(key string, value interface{}) {
+	a.preconditions[key] = value
+}
+
+func (a *Action) RemovePrecondition(key string) {
+	delete(a.preconditions, key)
+}
+
+func (a *Action) Preconditions() StateList {
+	return a.preconditions
+}
+
+func (a *Action) AddEffect(key string, value interface{}) {
+	a.effects[key] = value
+}
+
+func (a *Action) RemoveEffect(key string) {
+	delete(a.effects, key)
+}
+
+func (a *Action) Effects() StateList {
+	return a.effects
 }

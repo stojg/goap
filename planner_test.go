@@ -15,7 +15,7 @@ func TestPlan1(t *testing.T) {
 
 	agent := &testAgent{}
 
-	worldState := make(KeyValuePairs, 0)
+	worldState := make(StateList, 0)
 	worldState["isFull"] = false
 	worldState["hasFood"] = false
 
@@ -32,9 +32,9 @@ func TestPlan1(t *testing.T) {
 	sleep.AddPrecondition("isTired", true)
 	sleep.AddEffect("isTired", false)
 
-	availableActions := []Action{getFood, eat, sleep}
+	availableActions := []Actionable{getFood, eat, sleep}
 
-	goal := make(KeyValuePairs, 0)
+	goal := make(StateList, 0)
 	goal["isFull"] = true
 
 	actionList := Plan(agent, availableActions, worldState, goal)
@@ -62,7 +62,7 @@ func TestPlan2(t *testing.T) {
 
 	agent := &testAgent{}
 
-	worldState := make(KeyValuePairs, 0)
+	worldState := make(StateList, 0)
 	worldState["isFull"] = false
 	worldState["hasFood"] = false
 
@@ -84,9 +84,9 @@ func TestPlan2(t *testing.T) {
 	sleep.AddPrecondition("isTired", true)
 	sleep.AddEffect("isTired", false)
 
-	availableActions := []Action{getFood, prayForFood, eat, sleep}
+	availableActions := []Actionable{getFood, prayForFood, eat, sleep}
 
-	goal := make(KeyValuePairs, 0)
+	goal := make(StateList, 0)
 	goal["isFull"] = true
 
 	actionList := Plan(agent, availableActions, worldState, goal)
@@ -114,7 +114,7 @@ func TestPlan3_failed(t *testing.T) {
 
 	agent := &testAgent{}
 
-	worldState := make(KeyValuePairs, 0)
+	worldState := make(StateList, 0)
 	worldState["isFull"] = false
 	worldState["hasFood"] = false
 
@@ -131,10 +131,10 @@ func TestPlan3_failed(t *testing.T) {
 	sleep.AddPrecondition("isTired", true)
 	sleep.AddEffect("isTired", false)
 
-	availableActions := []Action{getFood, eat, sleep}
+	availableActions := []Actionable{getFood, eat, sleep}
 
 	// there are no actions that can fulfill this goal
-	goal := make(KeyValuePairs, 0)
+	goal := make(StateList, 0)
 	goal["isWarm"] = true
 
 	actionList := Plan(agent, availableActions, worldState, goal)
@@ -160,12 +160,12 @@ func Test_buildGraph(t *testing.T) {
 	hide.AddPrecondition("isHurt", true)
 	hide.AddEffect("isHidden", true)
 
-	usableActions := []Action{eat, eatSlowly, hide}
+	usableActions := []Actionable{eat, eatSlowly, hide}
 
-	goal := make(KeyValuePairs, 0)
+	goal := make(StateList, 0)
 	goal["isFull"] = true
 
-	worldState := make(KeyValuePairs, 0)
+	worldState := make(StateList, 0)
 	worldState["hasFood"] = true
 	worldState["isFull"] = false
 
@@ -185,10 +185,10 @@ func Test_buildGraph(t *testing.T) {
 
 func Test_inState_true(t *testing.T) {
 
-	test := make(KeyValuePairs, 0)
+	test := make(StateList, 0)
 	test["food"] = 2
 
-	state := make(KeyValuePairs, 0)
+	state := make(StateList, 0)
 	state["food"] = 2
 	state["temperature"] = 10
 
@@ -200,10 +200,10 @@ func Test_inState_true(t *testing.T) {
 
 func Test_inState_false(t *testing.T) {
 
-	test := make(KeyValuePairs, 0)
+	test := make(StateList, 0)
 	test["food"] = 1
 
-	state := make(KeyValuePairs, 0)
+	state := make(StateList, 0)
 	state["food"] = 2
 	state["temperature"] = 10
 
@@ -215,10 +215,10 @@ func Test_inState_false(t *testing.T) {
 
 func Test_inState_dont_exists(t *testing.T) {
 
-	test := make(KeyValuePairs, 0)
+	test := make(StateList, 0)
 	test["isHurt"] = true
 
-	state := make(KeyValuePairs, 0)
+	state := make(StateList, 0)
 	state["hasFood"] = true
 	state["isFull"] = false
 
@@ -233,7 +233,7 @@ func Test_actionSubset(t *testing.T) {
 	drop := &testAction{name: "drop"}
 	hide := &testAction{name: "hide"}
 
-	actions := []Action{eat, drop, hide}
+	actions := []Actionable{eat, drop, hide}
 
 	result := actionSubset(actions, drop)
 
@@ -256,11 +256,11 @@ func Test_actionSubset(t *testing.T) {
 
 func Test_populateState(t *testing.T) {
 
-	worldState := make(KeyValuePairs, 0)
+	worldState := make(StateList, 0)
 	worldState["food"] = 1
 	worldState["temperature"] = 10
 
-	changes := make(KeyValuePairs, 0)
+	changes := make(StateList, 0)
 	changes["food"] = 2
 
 	result := populateState(worldState, changes)
@@ -290,18 +290,16 @@ func Test_populateState(t *testing.T) {
 
 func newTestAction(name string, cost float64) *testAction {
 	return &testAction{
-		name:          name,
-		cost:          cost,
-		preconditions: make(KeyValuePairs, 0),
-		effects:       make(KeyValuePairs, 0),
+		name:   name,
+		cost:   cost,
+		Action: NewAction(),
 	}
 }
 
 type testAction struct {
-	name          string
-	cost          float64
-	preconditions KeyValuePairs
-	effects       KeyValuePairs
+	Action
+	name string
+	cost float64
 }
 
 func (a *testAction) Reset() {}
@@ -309,31 +307,13 @@ func (a *testAction) Reset() {}
 func (a *testAction) CheckProceduralPrecondition(agent Agent) bool {
 	return true
 }
-func (a *testAction) Preconditions() KeyValuePairs {
-	return a.preconditions
-}
-func (a *testAction) Effects() KeyValuePairs {
-	return a.effects
-}
+
 func (a *testAction) Cost() float64 {
 	return a.cost
 }
-func (a *testAction) AddPrecondition(key string, value interface{}) {
-	a.preconditions[key] = value
-}
-func (a *testAction) RemovePrecondition(key string) {
-	delete(a.preconditions, key)
-}
-func (a *testAction) AddEffect(key string, value interface{}) {
-	a.effects[key] = value
-}
-
-func (a *testAction) RemoveEffect(key string) {
-	delete(a.effects, key)
-}
 
 func (a *testAction) IsDone() bool {
-	return false
+	return true
 }
 
 func (a *testAction) IsInRange() bool {

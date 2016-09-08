@@ -1,19 +1,13 @@
-// Package goap is a Goal Orientated Action Planner
-// it was inspired by the source for of sploreg at
-// https://github.com/sploreg/goap/blob/d1cea0728fb4733266affea8049da1e373d618f7/Assets/Standard%20Assets/Scripts/AI/GOAP/GoapPlanner.cs
+// Package goap is a Goal Orientated Action Planner just mainly for game programming purposes
+// Inspired by https://github.com/sploreg/goap/
 package goap
 
-type Agent interface{}
-
-type Comparable interface {
-	Value() interface{}
-}
-
-type KeyValuePairs map[string]interface{}
+type StateList map[string]interface{}
 
 // Plan what sequence of actions can fulfill the goal. Returns null if a plan could not be found, or
 // a list of the actions that must be performed, in order, to fulfill the goal.
-func Plan(agent Agent, availableActions []Action, worldState KeyValuePairs, goal KeyValuePairs) []Action {
+//
+func Plan(agent Agent, availableActions []Actionable, worldState StateList, goal StateList) []Actionable {
 
 	// reset the actions so we can start fresh with them
 	for i := range availableActions {
@@ -21,7 +15,7 @@ func Plan(agent Agent, availableActions []Action, worldState KeyValuePairs, goal
 	}
 
 	// check what actions can run
-	var usableActions []Action
+	var usableActions []Actionable
 	for _, a := range availableActions {
 		if a.CheckProceduralPrecondition(agent) {
 			usableActions = append(usableActions, a)
@@ -46,14 +40,14 @@ func Plan(agent Agent, availableActions []Action, worldState KeyValuePairs, goal
 		}
 	}
 
-	var result []Action
+	var result []Actionable
 	n := cheapest
 
 	// go through the end node and work up to through it's parents
 	for n != nil {
 		if n.action != nil {
 			// insert action in front
-			result = append([]Action{n.action}, result...)
+			result = append([]Actionable{n.action}, result...)
 		}
 		n = n.parent
 	}
@@ -63,7 +57,7 @@ func Plan(agent Agent, availableActions []Action, worldState KeyValuePairs, goal
 // buildGraph returns true if at least one solution was found. The possible paths are stored in the
 // leaves list. Each leaf has a 'runningCost' value where the lowest cost will be the best action
 // sequence.
-func buildGraph(parent *node, leaves *[]*node, usableActions []Action, goal KeyValuePairs) bool {
+func buildGraph(parent *node, leaves *[]*node, usableActions []Actionable, goal StateList) bool {
 	foundOne := false
 
 	// go through each action available at this node and see if we can use it here
@@ -96,7 +90,7 @@ func buildGraph(parent *node, leaves *[]*node, usableActions []Action, goal KeyV
 
 // Check that all items in 'test' are in 'state'. If just one does not match or is not there then
 // this returns false.
-func inState(test KeyValuePairs, state KeyValuePairs) bool {
+func inState(test StateList, state StateList) bool {
 	for testKey, testVal := range test {
 		match := false
 		if stateVal, found := state[testKey]; found {
@@ -112,8 +106,8 @@ func inState(test KeyValuePairs, state KeyValuePairs) bool {
 }
 
 // apply the state change to the current state
-func populateState(currentState KeyValuePairs, stateChange KeyValuePairs) KeyValuePairs {
-	state := make(KeyValuePairs, 0)
+func populateState(currentState StateList, stateChange StateList) StateList {
+	state := make(StateList, 0)
 
 	// copy the KVPs over as new objects
 	for key, s := range currentState {
@@ -127,8 +121,8 @@ func populateState(currentState KeyValuePairs, stateChange KeyValuePairs) KeyVal
 	return state
 }
 
-func actionSubset(actions []Action, removeMe Action) []Action {
-	var subset []Action
+func actionSubset(actions []Actionable, removeMe Actionable) []Actionable {
+	var subset []Actionable
 	for _, a := range actions {
 		if a != removeMe {
 			subset = append(subset, a)
@@ -141,11 +135,11 @@ func actionSubset(actions []Action, removeMe Action) []Action {
 type node struct {
 	parent      *node
 	runningCost float64
-	state       KeyValuePairs
-	action      Action
+	state       StateList
+	action      Actionable
 }
 
-func newNode(parent *node, runningCost float64, state KeyValuePairs, action Action) *node {
+func newNode(parent *node, runningCost float64, state StateList, action Actionable) *node {
 	return &node{
 		parent:      parent,
 		runningCost: runningCost,
