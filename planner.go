@@ -6,20 +6,28 @@ package goap
 type Agent interface{}
 
 type Action interface {
+	// Reset any variables that need to be reset before planning happens again.
 	Reset()
-	CheckProceduralPrecondition(agent Agent) bool
+	// Is the action done
+	IsDone() bool
+	// Procedurally check if this action can run. Not all actions will need
+	// this, but some might.
+	CheckProceduralPrecondition(Agent) bool
+	// Run the action.
+	// Returns True if the action performed successfully or false
+	// if something happened and it can no longer perform. In this case
+	// the action queue should clear out and the goal cannot be reached.
+	Perform(Agent) bool
 	Preconditions() KeyValuePairs
 	Effects() KeyValuePairs
 	Cost() float64
 }
 
 type Comparable interface {
-	Equals(Comparable) bool
-	Key() string
 	Value() interface{}
 }
 
-type KeyValuePairs map[string]Comparable
+type KeyValuePairs map[string]interface{}
 
 // Plan what sequence of actions can fulfill the goal. Returns null if a plan could not be found, or
 // a list of the actions that must be performed, in order, to fulfill the goal.
@@ -89,23 +97,24 @@ func buildGraph(parent *node, leaves []*node, usableActions []Action, goal KeyVa
 	// go through each action available at this node and see if we can use it here
 	for _, action := range usableActions {
 		// if the parent state has the conditions for this action's preconditions, we can use it here
-		if inState(action.Preconditions(), parent.state) {
+		if !inState(action.Preconditions(), parent.state) {
+			continue
+		}
 
-			// apply the action's effects to the parent state
-			var currentState = populateState(parent.state, action.Effects())
-			node := newNode(parent, parent.runningCost+action.Cost(), currentState, action)
-			if inState(goal, currentState) {
-				// we found a solution!
-				// @todo should the node be added first in the list?
-				leaves = append(leaves, node)
+		// apply the action's effects to the parent state
+		var currentState = populateState(parent.state, action.Effects())
+		node := newNode(parent, parent.runningCost+action.Cost(), currentState, action)
+		if inState(goal, currentState) {
+			// we found a solution!
+			// @todo should the node be added first in the list?
+			leaves = append(leaves, node)
+			foundOne = true
+		} else {
+			// not at a solution yet, so test all the remaining actions and branch out the tree
+			subset := actionSubset(usableActions, action)
+			found := buildGraph(node, leaves, subset, goal)
+			if found {
 				foundOne = true
-			} else {
-				// not at a solution yet, so test all the remaining actions and branch out the tree
-				subset := actionSubset(usableActions, action)
-				found := buildGraph(node, leaves, subset, goal)
-				if found {
-					foundOne = true
-				}
 			}
 		}
 	}
@@ -122,18 +131,18 @@ func actionSubset(actions []Action, removeMe Action) []Action {
 	return subset
 }
 
-// apply the statechange to the currect state
+// apply the state change to the current state
 func populateState(currentState KeyValuePairs, stateChange KeyValuePairs) KeyValuePairs {
-	var state KeyValuePairs
+	state := make(KeyValuePairs, 0)
 
 	// copy the KVPs over as new objects
-	for _, s := range currentState {
-		state[s.Key()] = s
+	for key, s := range currentState {
+		state[key] = s
 	}
 
 	// if the key exists in the current state, update or add the Value
-	for _, change := range stateChange {
-		state[change.Key()] = change
+	for key, change := range stateChange {
+		state[key] = change
 	}
 	return state
 }
@@ -142,17 +151,14 @@ func populateState(currentState KeyValuePairs, stateChange KeyValuePairs) KeyVal
 // this returns false.
 func inState(test KeyValuePairs, state KeyValuePairs) bool {
 	for _, t := range test {
-
 		match := false
-
 		for _, s := range state {
 			// find at least one match in the world state
-			if s.Equals(t) {
+			if s == t {
 				match = true
 				break
 			}
 		}
-
 		if !match {
 			return false
 		}
