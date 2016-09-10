@@ -1,6 +1,6 @@
 package goap
 
-// Action is the interface that describes what the planner and
+// Actionable is the interface that describes what the planner and
 type Actionable interface {
 
 	// The cost of performing the action.
@@ -27,8 +27,8 @@ type Actionable interface {
 	// Does this action need to be within range of a target game object?
 	// If not then the moveTo state will not need to run for this action.
 	RequiresInRange() bool
-
 	IsInRange() bool
+	Target() interface{}
 
 	AddPrecondition(key string, value interface{})
 	RemovePrecondition(key string)
@@ -51,6 +51,7 @@ func NewAction() Action {
 type Action struct {
 	preconditions StateList
 	effects       StateList
+	target        interface{}
 }
 
 func (a *Action) AddPrecondition(key string, value interface{}) {
@@ -75,4 +76,8 @@ func (a *Action) RemoveEffect(key string) {
 
 func (a *Action) Effects() StateList {
 	return a.effects
+}
+
+func (a *Action) Target() interface{} {
+	return a.target
 }

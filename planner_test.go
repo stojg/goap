@@ -19,16 +19,16 @@ func TestPlan1(t *testing.T) {
 	worldState["isFull"] = false
 	worldState["hasFood"] = false
 
-	getFood := newTestAction("getFood", 8)
+	getFood := newTestAction("getFood", 8, false)
 	getFood.AddPrecondition("hasFood", false)
 	getFood.AddEffect("hasFood", true)
 
-	eat := newTestAction("eat", 4)
+	eat := newTestAction("eat", 4, false)
 	eat.AddPrecondition("hasFood", true)
 	eat.AddPrecondition("isFull", false)
 	eat.AddEffect("isFull", true)
 
-	sleep := newTestAction("sleep", 4)
+	sleep := newTestAction("sleep", 4, false)
 	sleep.AddPrecondition("isTired", true)
 	sleep.AddEffect("isTired", false)
 
@@ -66,21 +66,21 @@ func TestPlan2(t *testing.T) {
 	worldState["isFull"] = false
 	worldState["hasFood"] = false
 
-	getFood := newTestAction("getFood", 8)
+	getFood := newTestAction("getFood", 8, false)
 	getFood.AddPrecondition("hasFood", false)
 	getFood.AddEffect("hasFood", true)
 
 	// test that the planner finds the cheapest way to the same goal
-	prayForFood := newTestAction("prayForFood", 6)
+	prayForFood := newTestAction("prayForFood", 6, false)
 	prayForFood.AddPrecondition("hasFood", false)
 	prayForFood.AddEffect("hasFood", true)
 
-	eat := newTestAction("eat", 4)
+	eat := newTestAction("eat", 4, false)
 	eat.AddPrecondition("hasFood", true)
 	eat.AddPrecondition("isFull", false)
 	eat.AddEffect("isFull", true)
 
-	sleep := newTestAction("sleep", 4)
+	sleep := newTestAction("sleep", 4, false)
 	sleep.AddPrecondition("isTired", true)
 	sleep.AddEffect("isTired", false)
 
@@ -118,16 +118,16 @@ func TestPlan3_failed(t *testing.T) {
 	worldState["isFull"] = false
 	worldState["hasFood"] = false
 
-	getFood := newTestAction("getFood", 8)
+	getFood := newTestAction("getFood", 8, false)
 	getFood.AddPrecondition("hasFood", false)
 	getFood.AddEffect("hasFood", true)
 
-	eat := newTestAction("eat", 4)
+	eat := newTestAction("eat", 4, false)
 	eat.AddPrecondition("hasFood", true)
 	eat.AddPrecondition("isFull", false)
 	eat.AddEffect("isFull", true)
 
-	sleep := newTestAction("sleep", 4)
+	sleep := newTestAction("sleep", 4, false)
 	sleep.AddPrecondition("isTired", true)
 	sleep.AddEffect("isTired", false)
 
@@ -146,17 +146,17 @@ func TestPlan3_failed(t *testing.T) {
 
 func Test_buildGraph(t *testing.T) {
 
-	eat := newTestAction("eat", 4)
+	eat := newTestAction("eat", 4, false)
 	eat.AddPrecondition("hasFood", true)
 	eat.AddPrecondition("isFull", false)
 	eat.AddEffect("isFull", true)
 
-	eatSlowly := newTestAction("eatSlowly", 8)
+	eatSlowly := newTestAction("eatSlowly", 8, false)
 	eatSlowly.AddPrecondition("hasFood", true)
 	eatSlowly.AddPrecondition("isFull", false)
 	eatSlowly.AddEffect("isFull", true)
 
-	hide := newTestAction("hide", 2)
+	hide := newTestAction("hide", 2, false)
 	hide.AddPrecondition("isHurt", true)
 	hide.AddEffect("isHidden", true)
 
@@ -288,18 +288,23 @@ func Test_populateState(t *testing.T) {
 	}
 }
 
-func newTestAction(name string, cost float64) *testAction {
+func newTestAction(name string, cost float64, requiresInRange bool) *testAction {
 	return &testAction{
-		name:   name,
-		cost:   cost,
-		Action: NewAction(),
+		name:            name,
+		cost:            cost,
+		requiresInRange: requiresInRange,
+		Action:          NewAction(),
+		isDone:          true,
 	}
 }
 
 type testAction struct {
 	Action
-	name string
-	cost float64
+	name            string
+	cost            float64
+	requiresInRange bool
+	inRange         bool
+	isDone          bool
 }
 
 func (a *testAction) Reset() {}
@@ -313,19 +318,19 @@ func (a *testAction) Cost() float64 {
 }
 
 func (a *testAction) IsDone() bool {
-	return true
+	return a.isDone
+}
+
+func (a *testAction) RequiresInRange() bool {
+	return a.requiresInRange
 }
 
 func (a *testAction) IsInRange() bool {
-	return true
+	return a.inRange
 }
 
 func (a *testAction) Perform(agent Agent) bool {
 	return true
-}
-
-func (a *testAction) RequiresInRange() bool {
-	return false
 }
 
 func (a *testAction) String() string {
