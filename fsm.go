@@ -1,6 +1,6 @@
 package goap
 
-type FSMState func(fsm *FSM, obj GameObject)
+type FSMState func(fsm *FSM, obj Agent)
 
 type FSM struct {
 	stateStack []FSMState

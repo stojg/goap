@@ -229,9 +229,9 @@ func Test_inState_dont_exists(t *testing.T) {
 }
 
 func Test_actionSubset(t *testing.T) {
-	eat := &testAction{name: "eat"}
-	drop := &testAction{name: "drop"}
-	hide := &testAction{name: "hide"}
+	eat := newTestAction("eat", 2, false)
+	drop := newTestAction("drop", 2, false)
+	hide := newTestAction("hide", 2, false)
 
 	actions := []Actionable{eat, drop, hide}
 
@@ -290,35 +290,21 @@ func Test_populateState(t *testing.T) {
 
 func newTestAction(name string, cost float64, requiresInRange bool) *testAction {
 	return &testAction{
-		name:            name,
-		cost:            cost,
 		requiresInRange: requiresInRange,
-		Action:          NewAction(),
-		isDone:          true,
+		Action:          NewAction(name, cost),
 	}
 }
 
 type testAction struct {
 	Action
-	name            string
-	cost            float64
 	requiresInRange bool
 	inRange         bool
-	isDone          bool
 }
 
 func (a *testAction) Reset() {}
 
 func (a *testAction) CheckProceduralPrecondition(agent Agent) bool {
 	return true
-}
-
-func (a *testAction) Cost() float64 {
-	return a.cost
-}
-
-func (a *testAction) IsDone() bool {
-	return a.isDone
 }
 
 func (a *testAction) RequiresInRange() bool {
@@ -329,10 +315,7 @@ func (a *testAction) IsInRange() bool {
 	return a.inRange
 }
 
+// Perform will
 func (a *testAction) Perform(agent Agent) bool {
 	return true
-}
-
-func (a *testAction) String() string {
-	return a.name
 }

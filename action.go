@@ -28,6 +28,7 @@ type Actionable interface {
 	// If not then the moveTo state will not need to run for this action.
 	RequiresInRange() bool
 	IsInRange() bool
+	SetTarget(interface{})
 	Target() interface{}
 
 	AddPrecondition(key string, value interface{})
@@ -41,16 +42,22 @@ type Actionable interface {
 	String() string
 }
 
-func NewAction() Action {
+// NewAction create a new base Action
+func NewAction(name string, cost float64) Action {
 	return Action{
+		name:          name,
 		preconditions: make(StateList, 0),
 		effects:       make(StateList, 0),
+		cost:          cost,
 	}
 }
 
 type Action struct {
+	name          string
 	preconditions StateList
 	effects       StateList
+	cost          float64
+	isDone        bool
 	target        interface{}
 }
 
@@ -78,6 +85,22 @@ func (a *Action) Effects() StateList {
 	return a.effects
 }
 
+func (a *Action) Cost() float64 {
+	return a.cost
+}
+
+func (a *Action) IsDone() bool {
+	return a.isDone
+}
+
+func (a *Action) SetTarget(t interface{}) {
+	a.target = t
+}
+
 func (a *Action) Target() interface{} {
 	return a.target
+}
+
+func (a *Action) String() string {
+	return a.name
 }
