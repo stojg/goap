@@ -4,8 +4,6 @@ import (
 	"testing"
 )
 
-type testAgent struct{}
-
 type state struct {
 	key   string
 	value int
