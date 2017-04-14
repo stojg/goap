@@ -51,6 +51,10 @@ func (a *DefaultAgent) SetState(l StateList) {
 	a.currentState = l
 }
 
+func (a *DefaultAgent) AddState(s State) {
+	a.currentState[s.Name] = s.Value
+}
+
 func (a *DefaultAgent) GoalState() StateList {
 	return a.goalState
 }

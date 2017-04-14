@@ -125,6 +125,10 @@ func (a *Action) SetInRange() {
 	a.inRange = true
 }
 
+func (a *Action) SetIsDone() {
+	a.isDone = true
+}
+
 func (a *Action) IsDone() bool {
 	return a.isDone
 }

@@ -22,6 +22,13 @@ func (s *StateList) Dont(n State) *StateList {
 	return s
 }
 
+func (s *StateList) Query(n State) bool {
+	if v, ok := (*s)[n.Name]; ok {
+		return v
+	}
+	return false
+}
+
 type State struct {
 	Name  string
 	Value bool

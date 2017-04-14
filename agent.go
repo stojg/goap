@@ -32,6 +32,8 @@ type Agent interface {
 	// Set the starting state of the Agent, includes world information.
 	SetState(StateList)
 
+	AddState(State)
+
 	// Get the goal for this actor
 	GoalState() StateList
 
