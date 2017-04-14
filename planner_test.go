@@ -4,38 +4,19 @@ import (
 	"testing"
 )
 
-type state struct {
-	key   string
-	value int
-}
-
 func TestPlan1(t *testing.T) {
 
-	agent := &testAgent{}
+	agent := &DefaultAgent{}
 
-	worldState := make(StateList, 0)
-	worldState["isFull"] = false
-	worldState["hasFood"] = false
+	actions := []Actionable{findFood(), eatAction(), sleepAction()}
 
-	getFood := newTestAction("getFood", 8, false)
-	getFood.AddPrecondition("hasFood", false)
-	getFood.AddEffect("hasFood", true)
+	currentState := make(StateList)
+	currentState.Is(Hungry).Dont(HaveFood)
 
-	eat := newTestAction("eat", 4, false)
-	eat.AddPrecondition("hasFood", true)
-	eat.AddPrecondition("isFull", false)
-	eat.AddEffect("isFull", true)
+	goal := make(StateList)
+	goal.Isnt(Hungry)
 
-	sleep := newTestAction("sleep", 4, false)
-	sleep.AddPrecondition("isTired", true)
-	sleep.AddEffect("isTired", false)
-
-	availableActions := []Actionable{getFood, eat, sleep}
-
-	goal := make(StateList, 0)
-	goal["isFull"] = true
-
-	actionList := Plan(agent, availableActions, worldState, goal)
+	actionList := Plan(agent, actions, currentState, goal)
 
 	if actionList == nil {
 		t.Error("Expected to get a plan, got no plan")
@@ -45,49 +26,38 @@ func TestPlan1(t *testing.T) {
 	if len(actionList) != expectedActions {
 		t.Errorf("There should be %d actions in the plan, got %d", expectedActions, len(actionList))
 		t.Errorf("planned actions: %+v", actionList)
+		return
 	}
 
 	if actionList[0].String() != "getFood" {
 		t.Errorf("expected first action to be 'getFood', but got %s", actionList[0])
+		return
 	}
 
 	if actionList[1].String() != "eat" {
 		t.Errorf("expected second action to be 'eat', but got %s", actionList[1])
+		return
 	}
 }
 
 func TestPlan2(t *testing.T) {
 
-	agent := &testAgent{}
-
-	worldState := make(StateList, 0)
-	worldState["isFull"] = false
-	worldState["hasFood"] = false
-
-	getFood := newTestAction("getFood", 8, false)
-	getFood.AddPrecondition("hasFood", false)
-	getFood.AddEffect("hasFood", true)
+	agent := &DefaultAgent{}
 
 	// test that the planner finds the cheapest way to the same goal
 	prayForFood := newTestAction("prayForFood", 6, false)
-	prayForFood.AddPrecondition("hasFood", false)
-	prayForFood.AddEffect("hasFood", true)
+	prayForFood.AddEffect(HaveFood)
+	prayForFood.AddPrecondition(Dont(HaveFood))
 
-	eat := newTestAction("eat", 4, false)
-	eat.AddPrecondition("hasFood", true)
-	eat.AddPrecondition("isFull", false)
-	eat.AddEffect("isFull", true)
+	actions := []Actionable{findFood(), prayForFood, eatAction(), sleepAction()}
 
-	sleep := newTestAction("sleep", 4, false)
-	sleep.AddPrecondition("isTired", true)
-	sleep.AddEffect("isTired", false)
+	currentState := make(StateList)
+	currentState.Is(Hungry).Dont(HaveFood)
 
-	availableActions := []Actionable{getFood, prayForFood, eat, sleep}
+	goal := make(StateList)
+	goal.Isnt(Hungry)
 
-	goal := make(StateList, 0)
-	goal["isFull"] = true
-
-	actionList := Plan(agent, availableActions, worldState, goal)
+	actionList := Plan(agent, actions, currentState, goal)
 
 	if actionList == nil {
 		t.Error("Expected to get a plan, got no plan")
@@ -97,45 +67,34 @@ func TestPlan2(t *testing.T) {
 	if len(actionList) != expectedActions {
 		t.Errorf("There should be %d actions in the plan, got %d", expectedActions, len(actionList))
 		t.Errorf("planned actions: %+v", actionList)
+		return
 	}
 
 	if actionList[0].String() != "prayForFood" {
 		t.Errorf("expected first action to be 'prayForFood', but got %s", actionList[0])
+		return
 	}
 
 	if actionList[1].String() != "eat" {
 		t.Errorf("expected second action to be 'eat', but got %s", actionList[1])
+		return
 	}
 }
 
-func TestPlan3_failed(t *testing.T) {
+func TestPlan_failed(t *testing.T) {
 
-	agent := &testAgent{}
+	agent := &DefaultAgent{}
 
-	worldState := make(StateList, 0)
-	worldState["isFull"] = false
-	worldState["hasFood"] = false
-
-	getFood := newTestAction("getFood", 8, false)
-	getFood.AddPrecondition("hasFood", false)
-	getFood.AddEffect("hasFood", true)
-
-	eat := newTestAction("eat", 4, false)
-	eat.AddPrecondition("hasFood", true)
-	eat.AddPrecondition("isFull", false)
-	eat.AddEffect("isFull", true)
-
-	sleep := newTestAction("sleep", 4, false)
-	sleep.AddPrecondition("isTired", true)
-	sleep.AddEffect("isTired", false)
-
-	availableActions := []Actionable{getFood, eat, sleep}
+	actions := []Actionable{findFood(), eatAction(), sleepAction()}
 
 	// there are no actions that can fulfill this goal
-	goal := make(StateList, 0)
-	goal["isWarm"] = true
+	goal := make(StateList)
+	goal.Add(State{"isWarm", true})
 
-	actionList := Plan(agent, availableActions, worldState, goal)
+	currentState := make(StateList)
+	currentState.Is(Hungry).Dont(HaveFood)
+
+	actionList := Plan(agent, actions, currentState, goal)
 
 	if actionList != nil {
 		t.Error("Expected the planning to fail, but it didn't")
@@ -143,37 +102,30 @@ func TestPlan3_failed(t *testing.T) {
 }
 
 func Test_buildGraph(t *testing.T) {
-
-	eat := newTestAction("eat", 4, false)
-	eat.AddPrecondition("hasFood", true)
-	eat.AddPrecondition("isFull", false)
-	eat.AddEffect("isFull", true)
-
 	eatSlowly := newTestAction("eatSlowly", 8, false)
-	eatSlowly.AddPrecondition("hasFood", true)
-	eatSlowly.AddPrecondition("isFull", false)
-	eatSlowly.AddEffect("isFull", true)
+	eatSlowly.AddEffect(Isnt(Hungry), Dont(HaveFood))
+	eatSlowly.AddPrecondition(Hungry, HaveFood)
 
 	hide := newTestAction("hide", 2, false)
-	hide.AddPrecondition("isHurt", true)
-	hide.AddEffect("isHidden", true)
+	hide.AddPrecondition(IsHurt)
+	hide.AddEffect(IsHidden)
 
-	usableActions := []Actionable{eat, eatSlowly, hide}
+	actions := []Actionable{eatAction(), eatSlowly, hide}
 
-	goal := make(StateList, 0)
-	goal["isFull"] = true
+	currentState := make(StateList)
+	currentState.Add(HaveFood).Is(Hungry)
 
-	worldState := make(StateList, 0)
-	worldState["hasFood"] = true
-	worldState["isFull"] = false
+	goal := make(StateList)
+	goal.Isnt(Hungry)
 
-	start := newNode(nil, 0, worldState, nil)
+	start := newNode(nil, 0, currentState, nil)
 
 	var leaves []*node
-	found := buildGraph(start, &leaves, usableActions, goal)
+	found := buildGraph(start, &leaves, actions, goal)
 
 	if !found {
 		t.Error("expected to find a plan")
+		return
 	}
 
 	if len(leaves) < 1 {
@@ -183,12 +135,12 @@ func Test_buildGraph(t *testing.T) {
 
 func Test_inState_true(t *testing.T) {
 
-	test := make(StateList, 0)
-	test["food"] = 2
+	test := make(StateList)
+	test["food"] = true
 
-	state := make(StateList, 0)
-	state["food"] = 2
-	state["temperature"] = 10
+	state := make(StateList)
+	state["food"] = true
+	state["temperature"] = false
 
 	actual := inState(test, state)
 	if !actual {
@@ -198,12 +150,12 @@ func Test_inState_true(t *testing.T) {
 
 func Test_inState_false(t *testing.T) {
 
-	test := make(StateList, 0)
-	test["food"] = 1
+	test := make(StateList)
+	test["food"] = true
 
-	state := make(StateList, 0)
-	state["food"] = 2
-	state["temperature"] = 10
+	state := make(StateList)
+	state["food"] = false
+	state["temperature"] = true
 
 	actual := inState(test, state)
 	if actual {
@@ -213,10 +165,10 @@ func Test_inState_false(t *testing.T) {
 
 func Test_inState_dont_exists(t *testing.T) {
 
-	test := make(StateList, 0)
+	test := make(StateList)
 	test["isHurt"] = true
 
-	state := make(StateList, 0)
+	state := make(StateList)
 	state["hasFood"] = true
 	state["isFull"] = false
 
@@ -241,29 +193,32 @@ func Test_actionSubset(t *testing.T) {
 
 	if result[0] != eat {
 		t.Error("expected eat action")
+		return
 	}
 
 	if result[1] == drop {
 		t.Error("didnt expected drop action")
+		return
 	}
 
 	if result[1] != hide {
 		t.Error("did expected hide actiond")
+		return
 	}
 }
 
 func Test_populateState(t *testing.T) {
 
-	worldState := make(StateList, 0)
-	worldState["food"] = 1
-	worldState["temperature"] = 10
+	currentState := make(StateList)
+	currentState["food"] = false
+	currentState["temperature"] = true
 
-	changes := make(StateList, 0)
-	changes["food"] = 2
+	changes := make(StateList)
+	changes["food"] = true
 
-	result := populateState(worldState, changes)
+	result := populateState(currentState, changes)
 
-	if len(result) != len(worldState) {
+	if len(result) != len(currentState) {
 		t.Error("result should have the same # of entries as world state")
 	}
 
@@ -273,47 +228,35 @@ func Test_populateState(t *testing.T) {
 		return
 	}
 
-	if result["food"] != 2 {
-		t.Errorf("food state was not changed, expected 2, got %d", result["food"])
+	if !result["food"] {
+		t.Errorf("food state was not changed, expected true, got %d", result["food"])
 	}
 
-	if worldState["food"] != 1 {
-		t.Error("worldState failed to be treated as an immutable")
+	if currentState["food"] {
+		t.Error("currentState failed to be treated as an immutable")
 	}
 
-	if result["temperature"] != 10 {
+	if !result["temperature"] {
 		t.Error("unrelated state was changed, temperature is ", result["temperature"])
 	}
 }
 
 func newTestAction(name string, cost float64, requiresInRange bool) *testAction {
+	var action Action
+	if requiresInRange {
+		action = NewInRangeAction(name, cost)
+	} else {
+		action = NewAction(name, cost)
+	}
 	return &testAction{
-		requiresInRange: requiresInRange,
-		Action:          NewAction(name, cost),
+		Action: action,
 	}
 }
 
 type testAction struct {
 	Action
-	requiresInRange bool
-	inRange         bool
 }
 
-func (a *testAction) Reset() {}
-
-func (a *testAction) CheckProceduralPrecondition(agent Agent) bool {
-	return true
-}
-
-func (a *testAction) RequiresInRange() bool {
-	return a.requiresInRange
-}
-
-func (a *testAction) IsInRange() bool {
-	return a.inRange
-}
-
-// Perform will
 func (a *testAction) Perform(agent Agent) bool {
 	return true
 }

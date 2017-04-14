@@ -2,23 +2,18 @@
 // Inspired by https://github.com/sploreg/goap/
 package goap
 
-type StateList map[string]interface{}
-
 // Plan what sequence of actions can fulfill the goal. Returns null if a plan could not be found, or
 // a list of the actions that must be performed, in order, to fulfill the goal.
 //
 func Plan(agent Agent, availableActions []Actionable, worldState StateList, goal StateList) []Actionable {
 
-	// reset the actions so we can start fresh with them
-	for i := range availableActions {
-		availableActions[i].Reset()
-	}
-
 	// check what actions can run
 	var usableActions []Actionable
-	for _, a := range availableActions {
-		if a.CheckProceduralPrecondition(agent) {
-			usableActions = append(usableActions, a)
+	for _, action := range availableActions {
+		// reset the actions so we can start fresh with them
+		action.Reset()
+		if action.SetAgent(agent) {
+			usableActions = append(usableActions, action)
 		}
 	}
 
@@ -40,16 +35,13 @@ func Plan(agent Agent, availableActions []Actionable, worldState StateList, goal
 		}
 	}
 
-	var result []Actionable
-	n := cheapest
-
 	// go through the end node and work up to through it's parents
-	for n != nil {
+	var result []Actionable
+	for n := cheapest; n != nil; n = n.parent {
 		if n.action != nil {
 			// insert action in front
 			result = append([]Actionable{n.action}, result...)
 		}
-		n = n.parent
 	}
 	return result
 }
@@ -69,7 +61,7 @@ func buildGraph(parent *node, leaves *[]*node, usableActions []Actionable, goal 
 		}
 
 		// apply the action's effects to the parent state
-		var currentState = populateState(parent.state, action.Effects())
+		currentState := populateState(parent.state, action.Effects())
 		node := newNode(parent, parent.runningCost+action.Cost(), currentState, action)
 
 		if inState(goal, currentState) {
@@ -109,7 +101,7 @@ func inState(test StateList, state StateList) bool {
 
 // apply the state change to the current state
 func populateState(currentState StateList, stateChange StateList) StateList {
-	state := make(StateList, 0)
+	state := make(StateList)
 
 	// copy the KVPs over as new objects
 	for key, s := range currentState {

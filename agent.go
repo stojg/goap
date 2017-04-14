@@ -1,65 +1,55 @@
 package goap
 
-// IGoap must be implemented by agents that wants to use GOAP  It provides information to the GOAP
+// Agent must be implemented by agents that wants to use GOAP  It provides information to the GOAP
 // planner so it can plan what actions to use.
 //
 // It also provides an interface for the planner to give feedback to the Agent and report
 // success/failure.
-type DataProvider interface {
+type Agent interface {
+
+	// Get the actions that this agent can do
 	AvailableActions() []Actionable
 
+	// Set the actions that will allow this agent to reach it's goal
 	SetCurrentActions([]Actionable)
 
-	CurrentAction() Actionable
+	// Get current planned actions
+	CurrentActions() []Actionable
 
-	HasActionPlan() bool
+	// Move the agent towards the target in order for the next action to be able to perform. Return true if the Agent
+	// is at the target and the next action can perform, false if it is not there yet.
+	MoveAgent(Actionable) bool
 
+	// Advance the internal state machine and run actions
+	Update()
+
+	// Remove the currently running Action
 	PopCurrentAction()
 
-	/**
-	 * The starting state of the Agent and the world.
-	 * Supply what states are needed for actions to run.
-	 */
-	GetWorldState() StateList
+	// The starting state of the Agent and the world. Supplies what states are needed for actions to run.
+	State() StateList
 
-	/**
-	 * Give the planner a new goal so it can figure out
-	 * the actions needed to fulfill it.
-	 */
-	CreateGoalState() StateList
+	// Set the starting state of the Agent, includes world information.
+	SetState(StateList)
 
-	/**
-	 * No sequence of actions could be found for the supplied goal.
-	 * You will need to try another goal
-	 */
+	// Get the goal for this actor
+	GoalState() StateList
+
+	// Set the goal for this actor
+	SetGoalState(StateList)
+
+	// Below are life-cycle hooks that are called during the different stages
+	// of the planning.
+
+	// No sequence of actions could be found for the supplied goal. You will need to try another goal
 	PlanFailed(failedGoal StateList)
 
-	/**
-	 * A plan was found for the supplied goal.
-	 * These are the actions the Agent will perform, in order.
-	 */
+	// A plan was found for the supplied goal. These are the actions the Agent will perform, in order.
 	PlanFound(goal StateList, actions []Actionable)
 
-	/**
-	 * All actions are complete and the goal was reached. Hooray!
-	 */
+	// All actions are complete and the goal was reached.
 	ActionsFinished()
 
-	/**
-	 * One of the actions caused the plan to abort.
-	 * That action is returned.
-	 */
-	PlanAborted(aborter Actionable)
-
-	/**
-	 * Called during Update. Move the agent towards the target in order
-	 * for the next action to be able to perform.
-	 * Return true if the Agent is at the target and the next action can perform.
-	 * False if it is not there yet.
-	 */
-	MoveAgent(nextAction Actionable) bool
-}
-
-type Agent interface {
-	DataProvider
+	// One of the actions caused the plan to abort. That action is passed in.
+	PlanAborted(Actionable)
 }

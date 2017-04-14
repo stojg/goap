@@ -1,38 +1,22 @@
 package goap
 
 func newGetFoodAction(cost float64) *getFoodAction {
-	return &getFoodAction{
-		Action: NewAction("getFood", cost),
+	a := &getFoodAction{
+		Action: NewInRangeAction("getFood", cost),
 	}
+	return a
 }
 
 type getFoodAction struct {
 	Action
-	inRange bool
 	hasFood bool
 }
 
-func (a *getFoodAction) Reset() {}
-
-func (a *getFoodAction) CheckProceduralPrecondition(agent Agent) bool {
+func (a *getFoodAction) SetAgent(agent Agent) bool {
 	a.SetTarget([]int{10, 0, 200})
 	return true
 }
 
-func (a *getFoodAction) RequiresInRange() bool {
-	return true
-}
-
-func (a *getFoodAction) IsInRange() bool {
-	// first time we call this we are not in range, but next time yes
-	if !a.inRange {
-		a.inRange = true
-		return false
-	}
-	return true
-}
-
-// Perform will
 func (a *getFoodAction) Perform(agent Agent) bool {
 	a.hasFood = true
 	return true
@@ -42,63 +26,39 @@ func (a *getFoodAction) IsDone() bool {
 	return a.hasFood
 }
 
-func newEatAction(cost float64) *eatAction {
-	return &eatAction{
+func newEatAction(cost float64) *eatingAction {
+	a := &eatingAction{
 		Action: NewAction("eat", cost),
 	}
+	return a
 }
 
-type eatAction struct {
+type eatingAction struct {
 	Action
-	inRange bool
 }
 
-func (a *eatAction) Reset() {}
-
-func (a *eatAction) CheckProceduralPrecondition(agent Agent) bool {
+func (a *eatingAction) Perform(agent Agent) bool {
 	return true
 }
 
-func (a *eatAction) RequiresInRange() bool {
-	return false
-}
-
-func (a *eatAction) IsInRange() bool {
+func (a *eatingAction) IsDone() bool {
 	return true
 }
 
-func (a *eatAction) Perform(agent Agent) bool {
-	return true
-}
-
-func (a *eatAction) IsDone() bool {
-	return true
-}
-
-func newSleepAction(cost float64) *sleepAction {
-	return &sleepAction{
+func newSleepAction(cost float64) *sleepingAction {
+	return &sleepingAction{
 		Action: NewAction("sleep", cost),
 	}
 }
 
-type sleepAction struct {
+type sleepingAction struct {
 	Action
 }
 
-func (a *sleepAction) Reset() {}
-
-func (a *sleepAction) CheckProceduralPrecondition(agent Agent) bool {
+func (a *sleepingAction) IsInRange() bool {
 	return true
 }
 
-func (a *sleepAction) RequiresInRange() bool {
-	return false
-}
-
-func (a *sleepAction) IsInRange() bool {
-	return true
-}
-
-func (a *sleepAction) Perform(agent Agent) bool {
+func (a *sleepingAction) Perform(agent Agent) bool {
 	return true
 }

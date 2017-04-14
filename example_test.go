@@ -1,64 +1,127 @@
 package goap
 
+import "fmt"
+
+var (
+	HaveFood = State{"hasFood", true}
+	Hungry   = State{"isFull", false}
+	Tired    = State{"isTired", true}
+	IsHurt   = State{"isHurt", true}
+	IsHidden = State{"isHidden", true}
+)
+
+func findFood() *testAction {
+	findFood := newTestAction("getFood", 8, false)
+	findFood.AddEffect(HaveFood)
+	findFood.AddPrecondition(Dont(HaveFood))
+	return findFood
+}
+
+func eatAction() *testAction {
+	eat := newTestAction("eat", 4, false)
+	eat.AddEffect(Isnt(Hungry), Dont(HaveFood))
+	eat.AddPrecondition(HaveFood, Hungry)
+	return eat
+}
+
+func sleepAction() *testAction {
+	sleep := newTestAction("sleep", 4, false)
+	sleep.AddEffect(Isnt(Tired))
+	sleep.AddPrecondition(Tired)
+	return sleep
+}
+
+type TestAgent struct {
+	DefaultAgent
+	frame int
+}
+
+func (p *TestAgent) PlanFailed(failedGoal StateList) {
+	fmt.Printf("Planning failed: %v\n", failedGoal)
+}
+
+func (p *TestAgent) PlanFound(goal StateList, actions []Actionable) {
+	fmt.Printf("Planning success to goal %v with actions %v\n", goal, actions)
+}
+
+func (p *TestAgent) ActionsFinished() {
+	fmt.Println("all actions finished")
+}
+
+func (p *TestAgent) PlanAborted(aborter Actionable) {
+	fmt.Printf("plan aborted by %v\n", aborter)
+}
+
+func (p *TestAgent) MoveAgent(nextAction Actionable) bool {
+	return nextAction.IsInRange()
+}
+
+func (a *TestAgent) Update() {
+	a.frame++
+	fmt.Printf("#%d\n", a.frame)
+	a.FSM(a, func(m string) {
+		fmt.Println(m)
+	})
+}
+
 func ExamplePlan() {
 	getFood := newGetFoodAction(8)
-	getFood.AddPrecondition("hasFood", false)
-	getFood.AddEffect("hasFood", true)
+	getFood.AddEffect(HaveFood)
 
 	eat := newEatAction(4)
-	eat.AddPrecondition("hasFood", true)
-	eat.AddPrecondition("isFull", false)
-	eat.AddEffect("isFull", true)
+	eat.AddPrecondition(HaveFood, Hungry)
+	eat.AddEffect(Isnt(Hungry))
 
 	sleep := newSleepAction(4)
-	sleep.AddPrecondition("isTired", true)
-	sleep.AddEffect("isTired", false)
+	sleep.AddPrecondition(Tired)
+	sleep.AddEffect(Isnt(Tired))
 
-	actions := []Actionable{getFood, eat, sleep}
-	agent := newTestAgent(actions)
-	agent.Debug = true
+	agent := TestAgent{
+		DefaultAgent: NewDefaultAgent([]Actionable{getFood, eat, sleep}),
+	}
 
-	// 1. idle state, will do planning
+	currentState := make(StateList)
+	currentState.Add(Hungry).Dont(HaveFood)
+	agent.SetState(currentState)
+
+	goal := make(StateList)
+	goal.Isnt(Hungry)
+	agent.SetGoalState(goal)
+
+	// 1. idle state, will do planning, plan will be to getFood and then eat it
 	agent.Update()
 
-	// 2. perform action getFood, but discovers that will need to move
+	// 2. Discovers that it needs to move to get food
 	agent.Update()
 
-	// 3. Move to food, it' instantly succeeds
+	// 3. Move to food, it instantly succeeds
+	getFood.inRange = true
 	agent.Update()
 
-	// 4. We have moved and food is in range
-	agent.moveResult = true
-	//getFood.inRange = true
+	// 4. We have moved and food is in range, so run getFood action
 	agent.Update()
 
-	// 5. mark the getFoodAction as done
+	// 5. getFood action as done, progress to eat action
 	agent.Update()
 
-	// 6. time to eat that food
-	agent.Update()
-	//eat.isDone = true
-
-	// 7. We should be done here
+	// 6. eat action is done, there are no more steps in the plan
 	agent.Update()
 
 	// Output:
-	// #1
-	// idle - is planning
+	//#1
+	// Idle - is planning
 	// Planning success to goal map[isFull:true] with actions [getFood eat]
 	// #2
-	// doAction - scheduling moveTo getFood
+	// Do - scheduling moveTo getFood
 	// #3
-	// moveTo - MoveAgent(getFood)
+	// MoveTo - MoveAgent(getFood)
+	// MoveTo - done
 	// #4
-	// moveTo - MoveAgent(getFood)
-	// moveTo - done
+	// Do - getFood.Perform()
 	// #5
-	// doAction - getFood.Perform()
+	// Do - action getFood is done
+	// Do - eat.Perform()
 	// #6
-	// doAction - action getFood is done
-	// doAction - eat.Perform()
-	// #7
-	// doAction - action eat is done
+	// Do - action eat is done
 	// all actions finished
 }

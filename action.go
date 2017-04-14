@@ -16,7 +16,7 @@ type Actionable interface {
 
 	// Procedurally check if this action can run. Not all actions will need
 	// this, but some might.
-	CheckProceduralPrecondition(Agent) bool
+	SetAgent(Agent) bool
 
 	// Run the action.
 	// Returns True if the action performed successfully or false
@@ -32,11 +32,11 @@ type Actionable interface {
 	SetTarget(interface{})
 	Target() interface{}
 
-	AddPrecondition(key string, value interface{})
+	AddPrecondition(...State)
 	RemovePrecondition(key string)
 	Preconditions() StateList
 
-	AddEffect(key string, value interface{})
+	AddEffect(...State)
 	RemoveEffect(key string)
 	Effects() StateList
 
@@ -47,20 +47,32 @@ type Actionable interface {
 func NewAction(name string, cost float64) Action {
 	return Action{
 		name:          name,
-		preconditions: make(StateList, 0),
-		effects:       make(StateList, 0),
+		preconditions: make(StateList),
+		effects:       make(StateList),
 		cost:          cost,
 	}
 }
 
+// NewInRangeAction creates a new Action that requires the agent to be close to something
+func NewInRangeAction(name string, cost float64) Action {
+	return Action{
+		name:            name,
+		preconditions:   make(StateList),
+		effects:         make(StateList),
+		cost:            cost,
+		requiresInRange: true,
+	}
+}
+
 type Action struct {
-	name          string
-	preconditions StateList
-	effects       StateList
-	cost          float64
-	isDone        bool
-	inRange       bool
-	target        interface{}
+	name            string
+	preconditions   StateList
+	effects         StateList
+	cost            float64
+	isDone          bool
+	requiresInRange bool
+	inRange         bool
+	target          interface{}
 }
 
 func (a *Action) Reset() {
@@ -69,8 +81,10 @@ func (a *Action) Reset() {
 	a.target = nil
 }
 
-func (a *Action) AddPrecondition(key string, value interface{}) {
-	a.preconditions[key] = value
+func (a *Action) AddPrecondition(states ...State) {
+	for _, state := range states {
+		a.preconditions[state.Name] = state.Value
+	}
 }
 
 func (a *Action) RemovePrecondition(key string) {
@@ -81,8 +95,10 @@ func (a *Action) Preconditions() StateList {
 	return a.preconditions
 }
 
-func (a *Action) AddEffect(key string, value interface{}) {
-	a.effects[key] = value
+func (a *Action) AddEffect(states ...State) {
+	for _, state := range states {
+		a.effects[state.Name] = state.Value
+	}
 }
 
 func (a *Action) RemoveEffect(key string) {
@@ -95,6 +111,10 @@ func (a *Action) Effects() StateList {
 
 func (a *Action) Cost() float64 {
 	return a.cost
+}
+
+func (a *Action) RequiresInRange() bool {
+	return a.requiresInRange
 }
 
 func (a *Action) IsInRange() bool {
@@ -115,6 +135,10 @@ func (a *Action) SetTarget(t interface{}) {
 
 func (a *Action) Target() interface{} {
 	return a.target
+}
+
+func (a *Action) SetAgent(agent Agent) bool {
+	return true
 }
 
 func (a *Action) String() string {
