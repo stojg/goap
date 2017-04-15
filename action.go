@@ -98,10 +98,6 @@ func (a *DefaultAction) Cost() float64 {
 	return a.cost
 }
 
-func (a *DefaultAction) InRange(agent Agent) bool {
-	return true
-}
-
 func (a *DefaultAction) IsDone() bool {
 	return a.isDone
 }

@@ -37,7 +37,7 @@ func (s *StateList) Query(n State) bool {
 func (s *StateList) String() string {
 	var res []string
 	for k, v := range *s {
-		res = append(res, fmt.Sprintf("%s: %s", k, v))
+		res = append(res, fmt.Sprintf("%s: %v", k, v))
 	}
 	return strings.Join(res, ", ")
 }

@@ -259,3 +259,7 @@ type testAction struct {
 func (a *testAction) Perform(agent Agent) bool {
 	return true
 }
+
+func (a *testAction) InRange(agent Agent) bool {
+	return true
+}
