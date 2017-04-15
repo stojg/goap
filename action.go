@@ -102,10 +102,6 @@ func (a *DefaultAction) InRange(agent Agent) bool {
 	return true
 }
 
-func (a *DefaultAction) SetIsDone() {
-	a.isDone = true
-}
-
 func (a *DefaultAction) IsDone() bool {
 	return a.isDone
 }
