@@ -56,13 +56,13 @@ type DefaultAction struct {
 	preconditions   StateList
 	effects         StateList
 	cost            float64
-	isDone          bool
+	Done            bool
 	requiresInRange bool
 	target          interface{}
 }
 
 func (a *DefaultAction) Reset() {
-	a.isDone = false
+	a.Done = false
 	a.target = nil
 }
 
@@ -99,7 +99,7 @@ func (a *DefaultAction) Cost() float64 {
 }
 
 func (a *DefaultAction) IsDone() bool {
-	return a.isDone
+	return a.Done
 }
 
 func (a *DefaultAction) SetTarget(t interface{}) {
