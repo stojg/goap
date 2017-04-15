@@ -1,5 +1,10 @@
 package goap
 
+import (
+	"fmt"
+	"strings"
+)
+
 type StateList map[string]bool
 
 func (s *StateList) Add(n State) *StateList {
@@ -27,6 +32,14 @@ func (s *StateList) Query(n State) bool {
 		return v
 	}
 	return false
+}
+
+func (s *StateList) String() string {
+	var res []string
+	for k, v := range *s {
+		res = append(res, fmt.Sprintf("%s: %s", k, v))
+	}
+	return strings.Join(res, ", ")
 }
 
 type State struct {

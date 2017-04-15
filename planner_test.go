@@ -223,13 +223,13 @@ func Test_populateState(t *testing.T) {
 	}
 
 	if _, ok := result["food"]; !ok {
-		t.Logf("%s", result)
+		t.Logf("%s", result.String())
 		t.Error("could not find 'food' state")
 		return
 	}
 
 	if !result["food"] {
-		t.Errorf("food state was not changed, expected true, got %d", result["food"])
+		t.Errorf("food state was not changed, expected true, got %t", result["food"])
 	}
 
 	if currentState["food"] {
