@@ -8,7 +8,7 @@ func TestPlan1(t *testing.T) {
 
 	agent := &DefaultAgent{}
 
-	actions := []Actionable{findFood(), eatAction(), sleepAction()}
+	actions := []Action{findFood(), eatAction(), sleepAction()}
 
 	currentState := make(StateList)
 	currentState.Is(Hungry).Dont(HaveFood)
@@ -49,7 +49,7 @@ func TestPlan2(t *testing.T) {
 	prayForFood.AddEffect(HaveFood)
 	prayForFood.AddPrecondition(Dont(HaveFood))
 
-	actions := []Actionable{findFood(), prayForFood, eatAction(), sleepAction()}
+	actions := []Action{findFood(), prayForFood, eatAction(), sleepAction()}
 
 	currentState := make(StateList)
 	currentState.Is(Hungry).Dont(HaveFood)
@@ -85,7 +85,7 @@ func TestPlan_failed(t *testing.T) {
 
 	agent := &DefaultAgent{}
 
-	actions := []Actionable{findFood(), eatAction(), sleepAction()}
+	actions := []Action{findFood(), eatAction(), sleepAction()}
 
 	// there are no actions that can fulfill this goal
 	goal := make(StateList)
@@ -110,7 +110,7 @@ func Test_buildGraph(t *testing.T) {
 	hide.AddPrecondition(IsHurt)
 	hide.AddEffect(IsHidden)
 
-	actions := []Actionable{eatAction(), eatSlowly, hide}
+	actions := []Action{eatAction(), eatSlowly, hide}
 
 	currentState := make(StateList)
 	currentState.Add(HaveFood).Is(Hungry)
@@ -183,7 +183,7 @@ func Test_actionSubset(t *testing.T) {
 	drop := newTestAction("drop", 2, false)
 	hide := newTestAction("hide", 2, false)
 
-	actions := []Actionable{eat, drop, hide}
+	actions := []Action{eat, drop, hide}
 
 	result := actionSubset(actions, drop)
 
@@ -242,19 +242,19 @@ func Test_populateState(t *testing.T) {
 }
 
 func newTestAction(name string, cost float64, requiresInRange bool) *testAction {
-	var action Action
+	var action DefaultAction
 	if requiresInRange {
 		action = NewInRangeAction(name, cost)
 	} else {
 		action = NewAction(name, cost)
 	}
 	return &testAction{
-		Action: action,
+		DefaultAction: action,
 	}
 }
 
 type testAction struct {
-	Action
+	DefaultAction
 }
 
 func (a *testAction) Perform(agent Agent) bool {

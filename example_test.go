@@ -40,7 +40,7 @@ func (p *TestAgent) PlanFailed(failedGoal StateList) {
 	fmt.Printf("Planning failed: %v\n", failedGoal)
 }
 
-func (p *TestAgent) PlanFound(goal StateList, actions []Actionable) {
+func (p *TestAgent) PlanFound(goal StateList, actions []Action) {
 	fmt.Printf("Planning success to goal %v with actions %v\n", goal, actions)
 }
 
@@ -48,11 +48,11 @@ func (p *TestAgent) ActionsFinished() {
 	fmt.Println("all actions finished")
 }
 
-func (p *TestAgent) PlanAborted(aborter Actionable) {
+func (p *TestAgent) PlanAborted(aborter Action) {
 	fmt.Printf("plan aborted by %v\n", aborter)
 }
 
-func (p *TestAgent) MoveAgent(nextAction Actionable) bool {
+func (p *TestAgent) MoveAgent(nextAction Action) bool {
 	return nextAction.IsInRange()
 }
 
@@ -77,7 +77,7 @@ func ExamplePlan() {
 	sleep.AddEffect(Isnt(Tired))
 
 	agent := TestAgent{
-		DefaultAgent: NewDefaultAgent([]Actionable{getFood, eat, sleep}),
+		DefaultAgent: NewDefaultAgent([]Action{getFood, eat, sleep}),
 	}
 
 	currentState := make(StateList)

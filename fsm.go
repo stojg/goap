@@ -100,7 +100,7 @@ func MoveTo(fsm *FSM, agent Agent, debug func(string)) {
 	action := agent.CurrentActions()[0]
 
 	if action.Target() == nil {
-		debug("Error: MoveTo requires a target but has none. Planning failed. You did not assign the target in your Action.CanRun()")
+		debug("Error: MoveTo requires a target but has none. Planning failed. You did not assign the target in your Action.CheckContextPrecondition()")
 		fsm.Reset(Idle)
 		return
 	}

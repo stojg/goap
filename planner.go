@@ -5,10 +5,10 @@ package goap
 // Plan what sequence of actions can fulfill the goal. Returns null if a plan could not be found, or
 // a list of the actions that must be performed, in order, to fulfill the goal.
 //
-func Plan(agent Agent, availableActions []Actionable, worldState StateList, goal StateList) []Actionable {
+func Plan(agent Agent, availableActions []Action, worldState StateList, goal StateList) []Action {
 
 	// check what actions can run
-	var usableActions []Actionable
+	var usableActions []Action
 	for _, action := range availableActions {
 		// reset the actions so we can start fresh with them
 		action.Reset()
@@ -36,11 +36,11 @@ func Plan(agent Agent, availableActions []Actionable, worldState StateList, goal
 	}
 
 	// go through the end node and work up to through it's parents
-	var result []Actionable
+	var result []Action
 	for n := cheapest; n != nil; n = n.parent {
 		if n.action != nil {
 			// insert action in front
-			result = append([]Actionable{n.action}, result...)
+			result = append([]Action{n.action}, result...)
 		}
 	}
 	return result
@@ -49,7 +49,7 @@ func Plan(agent Agent, availableActions []Actionable, worldState StateList, goal
 // buildGraph returns true if at least one solution was found. The possible paths are stored in the
 // leaves list. Each leaf has a 'runningCost' value where the lowest cost will be the best action
 // sequence.
-func buildGraph(parent *node, leaves *[]*node, usableActions []Actionable, goal StateList) bool {
+func buildGraph(parent *node, leaves *[]*node, usableActions []Action, goal StateList) bool {
 	foundOne := false
 
 	// go through each action available at this node and see if we can use it here
@@ -115,8 +115,8 @@ func populateState(currentState StateList, stateChange StateList) StateList {
 	return state
 }
 
-func actionSubset(actions []Actionable, removeMe Actionable) []Actionable {
-	var subset []Actionable
+func actionSubset(actions []Action, removeMe Action) []Action {
+	var subset []Action
 	for _, a := range actions {
 		if a != removeMe {
 			subset = append(subset, a)
@@ -130,10 +130,10 @@ type node struct {
 	parent      *node
 	runningCost float64
 	state       StateList
-	action      Actionable
+	action      Action
 }
 
-func newNode(parent *node, runningCost float64, state StateList, action Actionable) *node {
+func newNode(parent *node, runningCost float64, state StateList, action Action) *node {
 	return &node{
 		parent:      parent,
 		runningCost: runningCost,

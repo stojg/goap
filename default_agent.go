@@ -1,6 +1,6 @@
 package goap
 
-func NewDefaultAgent(actions []Actionable) DefaultAgent {
+func NewDefaultAgent(actions []Action) DefaultAgent {
 	return DefaultAgent{
 		availableActions: actions,
 		StateMachine:     NewFSM(Idle),
@@ -10,8 +10,8 @@ func NewDefaultAgent(actions []Actionable) DefaultAgent {
 type DefaultAgent struct {
 	StateMachine *FSM
 
-	availableActions []Actionable
-	currentActions   []Actionable
+	availableActions []Action
+	currentActions   []Action
 
 	currentState StateList
 	goalState    StateList
@@ -19,15 +19,15 @@ type DefaultAgent struct {
 	moveResult bool
 }
 
-func (a *DefaultAgent) AvailableActions() []Actionable {
+func (a *DefaultAgent) AvailableActions() []Action {
 	return a.availableActions
 }
 
-func (a *DefaultAgent) AddAction(action Actionable) {
+func (a *DefaultAgent) AddAction(action Action) {
 	a.availableActions = append(a.availableActions, action)
 }
 
-func (a *DefaultAgent) CurrentActions() []Actionable {
+func (a *DefaultAgent) CurrentActions() []Action {
 	return a.currentActions
 }
 
@@ -35,7 +35,7 @@ func (a *DefaultAgent) PopCurrentAction() {
 	a.currentActions = a.currentActions[1:]
 }
 
-func (a *DefaultAgent) SetCurrentActions(actions []Actionable) {
+func (a *DefaultAgent) SetCurrentActions(actions []Action) {
 	a.currentActions = actions
 }
 
@@ -65,13 +65,13 @@ func (a *DefaultAgent) SetGoalState(l StateList) {
 
 func (p *DefaultAgent) PlanFailed(failedGoal StateList) {}
 
-func (p *DefaultAgent) PlanFound(goal StateList, actions []Actionable) {}
+func (p *DefaultAgent) PlanFound(goal StateList, actions []Action) {}
 
 func (p *DefaultAgent) ActionsFinished() {}
 
-func (p *DefaultAgent) PlanAborted(aborter Actionable) {}
+func (p *DefaultAgent) PlanAborted(aborter Action) {}
 
-func (p *DefaultAgent) MoveAgent(nextAction Actionable) bool {
+func (p *DefaultAgent) MoveAgent(nextAction Action) bool {
 	return false
 }
 
