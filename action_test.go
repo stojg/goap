@@ -28,7 +28,7 @@ func (a *getFoodAction) IsDone() bool {
 	return a.hasFood
 }
 
-func (a *getFoodAction) InRange() bool {
+func (a *getFoodAction) InRange(agent Agent) bool {
 	return a.inRange
 }
 
@@ -51,7 +51,7 @@ func (a *eatingAction) IsDone() bool {
 	return true
 }
 
-func (a *eatingAction) InRange() bool {
+func (a *eatingAction) InRange(agent Agent) bool {
 	return true
 }
 
@@ -65,7 +65,7 @@ type sleepingAction struct {
 	DefaultAction
 }
 
-func (a *sleepingAction) InRange() bool {
+func (a *sleepingAction) InRange(agent Agent) bool {
 	return true
 }
 

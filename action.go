@@ -25,7 +25,7 @@ type Action interface {
 
 	// Does this action need to be within range of a target game object?
 	// If not then the moveTo state will not need to run for this action.
-	InRange() bool
+	InRange(Agent) bool
 
 	SetTarget(interface{})
 	Target() interface{}
@@ -98,7 +98,7 @@ func (a *DefaultAction) Cost() float64 {
 	return a.cost
 }
 
-func (a *DefaultAction) InRange() bool {
+func (a *DefaultAction) InRange(agent Agent) bool {
 	return true
 }
 
