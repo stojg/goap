@@ -2,7 +2,6 @@ package goap
 
 // Action is the interface that describes what the planner and
 type Action interface {
-
 	// The cost of performing the action.
 	// Figure out a weight that suits the action.
 	// Changing it will affect what actions are chosen during planning.
@@ -26,9 +25,8 @@ type Action interface {
 
 	// Does this action need to be within range of a target game object?
 	// If not then the moveTo state will not need to run for this action.
-	RequiresInRange() bool
-	IsInRange() bool
-	SetInRange()
+	InRange() bool
+
 	SetTarget(interface{})
 	Target() interface{}
 
@@ -53,17 +51,6 @@ func NewAction(name string, cost float64) DefaultAction {
 	}
 }
 
-// NewInRangeAction creates a new DefaultAction that requires the agent to be close to something
-func NewInRangeAction(name string, cost float64) DefaultAction {
-	return DefaultAction{
-		name:            name,
-		preconditions:   make(StateList),
-		effects:         make(StateList),
-		cost:            cost,
-		requiresInRange: true,
-	}
-}
-
 type DefaultAction struct {
 	name            string
 	preconditions   StateList
@@ -71,13 +58,11 @@ type DefaultAction struct {
 	cost            float64
 	isDone          bool
 	requiresInRange bool
-	inRange         bool
 	target          interface{}
 }
 
 func (a *DefaultAction) Reset() {
 	a.isDone = false
-	a.inRange = false
 	a.target = nil
 }
 
@@ -113,16 +98,8 @@ func (a *DefaultAction) Cost() float64 {
 	return a.cost
 }
 
-func (a *DefaultAction) RequiresInRange() bool {
-	return a.requiresInRange
-}
-
-func (a *DefaultAction) IsInRange() bool {
-	return a.inRange
-}
-
-func (a *DefaultAction) SetInRange() {
-	a.inRange = true
+func (a *DefaultAction) InRange() bool {
+	return true
 }
 
 func (a *DefaultAction) SetIsDone() {

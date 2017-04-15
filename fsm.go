@@ -75,12 +75,8 @@ func Do(fsm *FSM, agent Agent, debug func(string)) {
 	}
 
 	action = agent.CurrentActions()[0]
-	inRange := true
-	if action.RequiresInRange() {
-		inRange = action.IsInRange()
-	}
 	// we need to move there first
-	if !inRange {
+	if !action.InRange() {
 		debug(fmt.Sprintf("Do - scheduling moveTo %s", action))
 		fsm.Push(MoveTo)
 		return

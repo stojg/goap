@@ -53,7 +53,7 @@ func (p *TestAgent) PlanAborted(aborter Action) {
 }
 
 func (p *TestAgent) MoveAgent(nextAction Action) bool {
-	return nextAction.IsInRange()
+	return nextAction.InRange()
 }
 
 func (a *TestAgent) Update() {

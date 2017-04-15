@@ -242,19 +242,18 @@ func Test_populateState(t *testing.T) {
 }
 
 func newTestAction(name string, cost float64, requiresInRange bool) *testAction {
-	var action DefaultAction
-	if requiresInRange {
-		action = NewInRangeAction(name, cost)
-	} else {
-		action = NewAction(name, cost)
+	action := &testAction{
+		DefaultAction: NewAction(name, cost),
 	}
-	return &testAction{
-		DefaultAction: action,
+	if !requiresInRange {
+		action.inRange = true
 	}
+	return action
 }
 
 type testAction struct {
 	DefaultAction
+	inRange bool
 }
 
 func (a *testAction) Perform(agent Agent) bool {
