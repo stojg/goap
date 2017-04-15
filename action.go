@@ -16,7 +16,7 @@ type Actionable interface {
 
 	// Procedurally check if this action can run. Not all actions will need
 	// this, but some might.
-	SetAgent(Agent) bool
+	CheckContextPrecondition(Agent) bool
 
 	// Run the action.
 	// Returns True if the action performed successfully or false
@@ -141,7 +141,7 @@ func (a *Action) Target() interface{} {
 	return a.target
 }
 
-func (a *Action) SetAgent(agent Agent) bool {
+func (a *Action) CheckContextPrecondition(agent Agent) bool {
 	return true
 }
 

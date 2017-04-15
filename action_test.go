@@ -12,7 +12,7 @@ type getFoodAction struct {
 	hasFood bool
 }
 
-func (a *getFoodAction) SetAgent(agent Agent) bool {
+func (a *getFoodAction) CheckContextPrecondition(agent Agent) bool {
 	a.SetTarget([]int{10, 0, 200})
 	return true
 }

@@ -12,7 +12,7 @@ func Plan(agent Agent, availableActions []Actionable, worldState StateList, goal
 	for _, action := range availableActions {
 		// reset the actions so we can start fresh with them
 		action.Reset()
-		if action.SetAgent(agent) {
+		if action.CheckContextPrecondition(agent) {
 			usableActions = append(usableActions, action)
 		}
 	}
