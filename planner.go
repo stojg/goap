@@ -7,6 +7,8 @@ package goap
 //
 func Plan(agent Agent, availableActions []Action, worldState StateList, goal StateList) []Action {
 
+	var result []Action
+
 	// check what actions can run
 	var usableActions []Action
 	for _, action := range availableActions {
@@ -15,6 +17,10 @@ func Plan(agent Agent, availableActions []Action, worldState StateList, goal Sta
 		if action.CheckContextPrecondition(agent) {
 			usableActions = append(usableActions, action)
 		}
+	}
+
+	if len(usableActions) == 0 {
+		return result
 	}
 
 	// we now have all actions that can run, stored in usableActions
@@ -36,7 +42,6 @@ func Plan(agent Agent, availableActions []Action, worldState StateList, goal Sta
 	}
 
 	// go through the end node and work up to through it's parents
-	var result []Action
 	for n := cheapest; n != nil; n = n.parent {
 		if n.action != nil {
 			// insert action in front
