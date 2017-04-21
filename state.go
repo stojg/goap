@@ -27,9 +27,9 @@ func (s *StateList) Dont(n State) *StateList {
 	return s
 }
 
-func (s *StateList) Query(n State) bool {
-	if v, ok := (*s)[n.Name]; ok {
-		return v
+func (s StateList) Query(n State) bool {
+	if v, ok := s[n.Name]; ok {
+		return v == n.Value
 	}
 	return false
 }
